@@ -39,14 +39,31 @@ const Editor = ({ closeEditor }: Props) => {
     setArtValue(artValue);
   }, [rows, columns]);
 
-
   async function addNewArt(body: string) {
     try {
       await octokit.rest.issues.create({
         owner: 'ajo-alex',
         repo: 'pixelpaperart',
-        title: "New Art Submission",
-        body: body,
+        title: "🎨 New Art Submission",
+        body: `
+          ## 🎨 New Pixel Art Submission
+
+          ### 📐 Dimensions
+          - **Rows:** ${rows}
+          - **Columns:** ${columns}
+
+          ### 🧩 Art Data
+          \`\`\`json
+          ${body}
+          \`\`\`
+
+          ---
+
+          ### 📌 Notes
+          - Submitted via website
+          - Awaiting review
+
+          `,
       });
       toast.success('Art submitted for review')
     } catch (error) {
