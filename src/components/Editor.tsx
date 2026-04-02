@@ -72,7 +72,7 @@ const Editor = ({ closeEditor }: Props) => {
   }
 
   return (
-    <div className='flex flex-row h-full'>
+    <div className='flex flex-col md:flex-row h-full'>
       <div className='w-[300px] bg-amber-300 flex flex-col justify-between p-6 shadow-[8px_8px_0px_rgba(0,0,0,1)]'>
         <div className=' gap-2'>
           <div>Number of Rows</div>
@@ -99,7 +99,7 @@ const Editor = ({ closeEditor }: Props) => {
         </div>
       </div>
       <div className=' w-full h-full flex justify-center items-center'>
-        <div className='flex flex-row flex-wrap  ' style={{ width: `${(columns * 5) + 3}mm` }}>
+        <div className='flex flex-row flex-wrap  ' style={{ minWidth: `${(columns * 5) + 3}mm`, maxWidth: `${(columns * 5) + 3}mm` }}>
           {artValue?.map((item) => {
             return <div key={item.id} onClick={() => {
               // change the color of item into red
@@ -109,8 +109,6 @@ const Editor = ({ closeEditor }: Props) => {
         </div>
       </div>
     </div>
-
-
   )
 }
 
