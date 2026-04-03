@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { octokit } from '../lib/github'
 import toast from 'react-hot-toast'
+import { generatePixelArt } from '../utils/pixartGenerator'
 
 interface Props {
   closeEditor: () => void
@@ -12,6 +13,8 @@ const Editor = ({ closeEditor }: Props) => {
   const [columns, setColumns] = useState(20)
   const [color, setColor] = useState('#000000')
   const [showGrid, setShowGrid] = useState(true)
+  const [artTitle, setArtTitle] = useState('')
+  const [instaUsername, setInstaUsername] = useState('')
 
   const getAlphabetLabel = (index: number) => {
     let label = '';
@@ -39,7 +42,23 @@ const Editor = ({ closeEditor }: Props) => {
     setArtValue(artValue);
   }, [rows, columns]);
 
+  useEffect(() => {
+    toast.custom((t) => (
+      <div className='flex flex-col gap-2 bg-amber-300 shadow-[4px_4px_0px_rgba(0,0,0,1)] p-2 w-[300px]'>
+        - If you experience any issues viewing the editor, please zoom out your browser using Ctrl + - <br />
+        - Always use a low-detail image for better results in image generation. <br />
+        <button onClick={() => toast.dismiss(t.id)} className='bg-red-500 w-full p-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] cursor-pointer'>Dismiss</button>
+      </div>
+    ));
+
+  }, [])
+
+
   async function addNewArt(body: string) {
+    if (!artTitle || !instaUsername) {
+      toast.error('Please fill in all the fields')
+      return
+    }
     try {
       await octokit.rest.issues.create({
         owner: 'ajo-alex',
@@ -51,6 +70,8 @@ const Editor = ({ closeEditor }: Props) => {
           ### 📐 Dimensions
           - **Rows:** ${rows}
           - **Columns:** ${columns}
+          - **Insta username:** ${instaUsername}
+          - **Art Title:** ${artTitle}
 
           ### 🧩 Art Data
           \`\`\`json
@@ -84,12 +105,28 @@ const Editor = ({ closeEditor }: Props) => {
           <div className='mt-2'>
             Show grid lines: <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
           </div>
+          <div>
+            <input type="file" accept="image/*" className='w-full border border-black mt-2' onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) {
+                setColumns(50)
+                setRows(50)
+                generatePixelArt(file, 50).then((pixels) => {
+                  setArtValue(pixels)
+                })
+              }
+            }} />
+          </div>
         </div>
 
         <div className='flex flex-col gap-2'>
-          <button onClick={() => {
-            addNewArt(JSON.stringify(artValue))
-          }} className='bg-green-500 w-full p-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] cursor-pointer'>Publish</button>
+          <div className='border p-2 flex flex-col gap-2' >
+            <input type="text" placeholder='Art Title' className='border w-full border-black p-2' value={artTitle} onChange={(e) => setArtTitle(e.target.value)} />
+            <input type="text" placeholder='Insta username' className='border w-full border-black p-2' value={instaUsername} onChange={(e) => setInstaUsername(e.target.value)} />
+            <button onClick={() => {
+              addNewArt(JSON.stringify(artValue))
+            }} className='bg-green-500 w-full p-2 shadow-[4px_4px_0px_rgba(0,0,0,1)] cursor-pointer'>Publish</button>
+          </div>
           <button onClick={() => {
             setArtValue(artValue.map((art) => ({ ...art, color: '#ffffff' })))
             setColumns(20); setRows(20); toast.success('Editor reset')
@@ -102,7 +139,6 @@ const Editor = ({ closeEditor }: Props) => {
         <div className='flex flex-row flex-wrap  ' style={{ minWidth: `${(columns * 5) + 3}mm`, maxWidth: `${(columns * 5) + 3}mm` }}>
           {artValue?.map((item) => {
             return <div key={item.id} onClick={() => {
-              // change the color of item into red
               setArtValue(artValue.map((art) => art.id === item.id ? { ...art, color: color } : art))
             }} className={`w-[5mm] h-[5mm] ${showGrid ? 'border' : ''}`} style={{ backgroundColor: item.color }} />
           })}
